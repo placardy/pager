@@ -1,0 +1,29 @@
+# Прод: один контейнер без открытых портов. Наружу Pager выставляет общий
+# Caddy сервера (проект edge) — он держит 80/443 и ходит в pager-web:8080
+# по общей сети edge.
+name: pager
+
+services:
+  web:
+    build: .
+    container_name: pager-web
+    restart: unless-stopped
+    environment:
+      POLZA_AI_API_KEY: ${POLZA_AI_API_KEY:-}
+      TRANSLATE_MODEL: ${TRANSLATE_MODEL:-anthropic/claude-haiku-5.5}
+      REFRESH: ${REFRESH:-15m}
+      PER_SOURCE: ${PER_SOURCE:-10}
+    volumes:
+      # Кэш переводов: без него после рестарта всё переводится заново.
+      - data:/data
+    networks:
+      - edge
+    mem_limit: 96m
+
+networks:
+  # Общая сеть сервера, создаётся один раз руками: docker network create edge.
+  edge:
+    external: true
+
+volumes:
+  data:

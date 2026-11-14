@@ -1,0 +1,423 @@
+{
+  "sections": [
+    {
+      "id": "fashion",
+      "name": {
+        "ru": "Мода",
+        "en": "Fashion"
+      },
+      "sources": [
+        {
+          "name": "Vogue",
+          "lang": "en",
+          "site": "https://www.vogue.com",
+          "feed": "https://www.vogue.com/feed/rss"
+        },
+        {
+          "name": "Buro 24/7",
+          "lang": "ru",
+          "site": "https://www.buro247.ru",
+          "feed": "https://www.buro247.ru/rss.xml"
+        },
+        {
+          "name": "Harper's Bazaar",
+          "lang": "en",
+          "site": "https://www.harpersbazaar.com",
+          "feed": "https://www.harpersbazaar.com/rss/all.xml/"
+        },
+        {
+          "name": "The Blueprint",
+          "lang": "ru",
+          "site": "https://theblueprint.ru",
+          "feed": "https://theblueprint.ru/rss"
+        },
+        {
+          "name": "WWD",
+          "lang": "en",
+          "site": "https://wwd.com",
+          "feed": "https://wwd.com/feed/"
+        },
+        {
+          "name": "Сплетник",
+          "name_en": "Spletnik",
+          "lang": "ru",
+          "site": "https://www.spletnik.ru",
+          "feed": "https://www.spletnik.ru/rss"
+        },
+        {
+          "name": "Hypebeast",
+          "lang": "en",
+          "site": "https://hypebeast.com",
+          "feed": "https://hypebeast.com/feed"
+        },
+        {
+          "name": "Highsnobiety",
+          "lang": "en",
+          "site": "https://www.highsnobiety.com",
+          "feed": "https://www.highsnobiety.com/feed/"
+        },
+        {
+          "name": "Elle",
+          "lang": "en",
+          "site": "https://www.elle.com",
+          "feed": "https://www.elle.com/rss/all.xml/"
+        },
+        {
+          "name": "Fashionista",
+          "lang": "en",
+          "site": "https://fashionista.com",
+          "feed": "https://fashionista.com/.rss/full/"
+        },
+        {
+          "name": "Esquire",
+          "lang": "en",
+          "site": "https://www.esquire.com",
+          "feed": "https://www.esquire.com/rss/all.xml/"
+        }
+      ]
+    },
+    {
+      "id": "film",
+      "name": {
+        "ru": "Кино и музыка",
+        "en": "Film & music"
+      },
+      "sources": [
+        {
+          "name": "Variety",
+          "lang": "en",
+          "site": "https://variety.com",
+          "feed": "https://variety.com/feed/"
+        },
+        {
+          "name": "Billboard",
+          "lang": "en",
+          "site": "https://www.billboard.com",
+          "feed": "https://www.billboard.com/feed/"
+        },
+        {
+          "name": "The A.V. Club",
+          "lang": "en",
+          "site": "https://www.avclub.com",
+          "feed": "https://www.avclub.com/rss"
+        },
+        {
+          "name": "TMZ",
+          "lang": "en",
+          "site": "https://www.tmz.com",
+          "feed": "https://www.tmz.com/rss.xml"
+        },
+        {
+          "name": "Vanity Fair",
+          "lang": "en",
+          "site": "https://www.vanityfair.com",
+          "feed": "https://www.vanityfair.com/feed/rss"
+        }
+      ]
+    },
+    {
+      "id": "social",
+      "name": {
+        "ru": "Соцсети",
+        "en": "Social"
+      },
+      "sources": [
+        {
+          "name": "Social Media Today",
+          "lang": "en",
+          "site": "https://www.socialmediatoday.com",
+          "feed": "https://www.socialmediatoday.com/feeds/news/"
+        },
+        {
+          "name": "Cossa",
+          "lang": "ru",
+          "site": "https://www.cossa.ru",
+          "feed": "https://www.cossa.ru/rss/"
+        },
+        {
+          "name": "Reddit",
+          "lang": "en",
+          "site": "https://www.reddit.com",
+          "feed": "https://www.reddit.com/.rss"
+        },
+        {
+          "name": "Mashable",
+          "lang": "en",
+          "site": "https://mashable.com",
+          "feed": "https://mashable.com/feeds/rss/all"
+        },
+        {
+          "name": "Tubefilter",
+          "lang": "en",
+          "site": "https://www.tubefilter.com",
+          "feed": "https://www.tubefilter.com/feed/"
+        },
+        {
+          "name": "Sostav",
+          "lang": "ru",
+          "site": "https://www.sostav.ru",
+          "feed": "https://www.sostav.ru/rss"
+        },
+        {
+          "name": "The Verge Creators",
+          "lang": "en",
+          "site": "https://www.theverge.com/creators",
+          "feed": "https://www.theverge.com/rss/creators/index.xml"
+        },
+        {
+          "name": "Social Media Examiner",
+          "lang": "en",
+          "site": "https://www.socialmediaexaminer.com",
+          "feed": "https://www.socialmediaexaminer.com/feed/"
+        },
+        {
+          "name": "TechCrunch Social",
+          "lang": "en",
+          "site": "https://techcrunch.com/category/social/",
+          "feed": "https://techcrunch.com/category/social/feed/"
+        },
+        {
+          "name": "Hootsuite Blog",
+          "lang": "en",
+          "site": "https://blog.hootsuite.com",
+          "feed": "https://blog.hootsuite.com/feed/"
+        }
+      ]
+    },
+    {
+      "id": "business",
+      "name": {
+        "ru": "Бизнес",
+        "en": "Business"
+      },
+      "sources": [
+        {
+          "name": "Fast Company",
+          "lang": "en",
+          "site": "https://www.fastcompany.com",
+          "feed": "https://www.fastcompany.com/latest/rss"
+        },
+        {
+          "name": "Ведомости",
+          "name_en": "Vedomosti",
+          "lang": "ru",
+          "site": "https://www.vedomosti.ru",
+          "feed": "https://www.vedomosti.ru/rss/rubric/business"
+        },
+        {
+          "name": "Fortune",
+          "lang": "en",
+          "site": "https://fortune.com",
+          "feed": "https://fortune.com/feed/"
+        },
+        {
+          "name": "Коммерсантъ",
+          "name_en": "Kommersant",
+          "lang": "ru",
+          "site": "https://www.kommersant.ru/rubric/4",
+          "feed": "https://www.kommersant.ru/RSS/section-business.xml"
+        },
+        {
+          "name": "Business Insider",
+          "lang": "en",
+          "site": "https://www.businessinsider.com",
+          "feed": "https://feeds.businessinsider.com/custom/all"
+        }
+      ]
+    },
+    {
+      "id": "art",
+      "name": {
+        "ru": "Искусство",
+        "en": "Art"
+      },
+      "sources": [
+        {
+          "name": "Colossal",
+          "lang": "en",
+          "site": "https://www.thisiscolossal.com",
+          "feed": "https://www.thisiscolossal.com/feed/"
+        },
+        {
+          "name": "The Art Newspaper Russia",
+          "lang": "ru",
+          "site": "https://www.theartnewspaper.ru",
+          "feed": "https://www.theartnewspaper.ru/rss/"
+        },
+        {
+          "name": "Hyperallergic",
+          "lang": "en",
+          "site": "https://hyperallergic.com",
+          "feed": "https://hyperallergic.com/feed/"
+        },
+        {
+          "name": "Искусство",
+          "name_en": "Iskusstvo",
+          "lang": "ru",
+          "site": "https://www.iskusstvo-info.ru",
+          "feed": "https://www.iskusstvo-info.ru/feed/"
+        },
+        {
+          "name": "Dezeen",
+          "lang": "en",
+          "site": "https://www.dezeen.com",
+          "feed": "https://www.dezeen.com/feed/"
+        },
+        {
+          "name": "Арзамас",
+          "name_en": "Arzamas",
+          "lang": "ru",
+          "site": "https://arzamas.academy",
+          "feed": "https://arzamas.academy/feed_v1.rss"
+        },
+        {
+          "name": "Designboom",
+          "lang": "en",
+          "site": "https://www.designboom.com",
+          "feed": "https://www.designboom.com/feed/"
+        },
+        {
+          "name": "Культурология",
+          "name_en": "Kulturologia",
+          "lang": "ru",
+          "site": "https://kulturologia.ru",
+          "feed": "https://kulturologia.ru/rss/"
+        },
+        {
+          "name": "Artnet News",
+          "lang": "en",
+          "site": "https://news.artnet.com",
+          "feed": "https://news.artnet.com/feed"
+        },
+        {
+          "name": "Artforum",
+          "lang": "en",
+          "site": "https://www.artforum.com",
+          "feed": "https://www.artforum.com/feed/"
+        }
+      ]
+    },
+    {
+      "id": "tech",
+      "name": {
+        "ru": "Технологии",
+        "en": "Tech"
+      },
+      "sources": [
+        {
+          "name": "Hacker News",
+          "lang": "en",
+          "site": "https://news.ycombinator.com",
+          "feed": "https://hnrss.org/frontpage"
+        },
+        {
+          "name": "Хабр",
+          "name_en": "Habr",
+          "lang": "ru",
+          "site": "https://habr.com/ru/",
+          "feed": "https://habr.com/ru/rss/best/daily/?fl=ru"
+        },
+        {
+          "name": "Ars Technica",
+          "lang": "en",
+          "site": "https://arstechnica.com",
+          "feed": "https://feeds.arstechnica.com/arstechnica/index"
+        },
+        {
+          "name": "3DNews",
+          "lang": "ru",
+          "site": "https://3dnews.ru",
+          "feed": "https://3dnews.ru/news/rss/"
+        },
+        {
+          "name": "The Verge",
+          "lang": "en",
+          "site": "https://www.theverge.com",
+          "feed": "https://www.theverge.com/rss/index.xml"
+        },
+        {
+          "name": "iXBT",
+          "lang": "ru",
+          "site": "https://www.ixbt.com",
+          "feed": "https://www.ixbt.com/export/news.rss"
+        },
+        {
+          "name": "TechCrunch",
+          "lang": "en",
+          "site": "https://techcrunch.com",
+          "feed": "https://techcrunch.com/feed/"
+        },
+        {
+          "name": "vc.ru",
+          "lang": "ru",
+          "site": "https://vc.ru",
+          "feed": "https://vc.ru/rss/all"
+        },
+        {
+          "name": "Wired",
+          "lang": "en",
+          "site": "https://www.wired.com",
+          "feed": "https://www.wired.com/feed/rss"
+        },
+        {
+          "name": "AppleInsider",
+          "lang": "en",
+          "site": "https://appleinsider.com",
+          "feed": "https://appleinsider.com/rss/news/"
+        },
+        {
+          "name": "Techmeme",
+          "lang": "en",
+          "site": "https://www.techmeme.com",
+          "feed": "https://www.techmeme.com/feed.xml"
+        }
+      ]
+    },
+    {
+      "id": "science",
+      "name": {
+        "ru": "Наука",
+        "en": "Science"
+      },
+      "sources": [
+        {
+          "name": "Quanta",
+          "lang": "en",
+          "site": "https://www.quantamagazine.org",
+          "feed": "https://www.quantamagazine.org/feed/"
+        },
+        {
+          "name": "N + 1",
+          "lang": "ru",
+          "site": "https://nplus1.ru",
+          "feed": "https://nplus1.ru/rss"
+        },
+        {
+          "name": "Nature",
+          "lang": "en",
+          "site": "https://www.nature.com/nature",
+          "feed": "https://www.nature.com/nature.rss"
+        },
+        {
+          "name": "Элементы",
+          "name_en": "Elementy",
+          "lang": "ru",
+          "site": "https://elementy.ru",
+          "feed": "https://elementy.ru/rss/news"
+        },
+        {
+          "name": "MIT Technology Review",
+          "lang": "en",
+          "site": "https://www.technologyreview.com",
+          "feed": "https://www.technologyreview.com/feed/"
+        },
+        {
+          "name": "Naked Science",
+          "lang": "ru",
+          "site": "https://naked-science.ru",
+          "feed": "https://naked-science.ru/feed"
+        }
+      ]
+    }
+  ]
+}
