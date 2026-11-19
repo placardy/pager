@@ -51,11 +51,24 @@ func main() {
 	if key := os.Getenv("POLZA_AI_API_KEY"); key != "" {
 		base := env("POLZA_BASE_URL", "https://polza.ai/api")
 		model := env("TRANSLATE_MODEL", "anthropic/claude-haiku-5.5")
-		tr = translate.NewPolza(key, base, model)
-		// Идеи — один запрос в несколько часов, тут берём модель сильнее.
-		ideasModel := env("IDEAS_MODEL", "anthropic/claude-sonnet-5.5")
-		gen = ideas.New(translate.NewPolza(key, base, ideasModel), env("IDEAS_PATH", "data/ideas.json"), envDuration("IDEAS_EVERY", 8*time.Hour))
-		after = func(s *digest.Snapshot) { go gen.MaybeGenerate(ctx, s) }
+		trLLM := translate.NewPolza(key, base, model)
+		tr = trLLM
+		// Тренды на Haiku: сбор ~0,6 ₽ против ~9,5 ₽ у Sonnet (оценка по
+		// ценам Polza и размеру запроса). Раз в 12 часов от прошлого сбора,
+		// не по часам.
+		ideasModel := env("IDEAS_MODEL", "anthropic/claude-haiku-5.5")
+		ideasLLM := translate.NewPolza(key, base, ideasModel)
+		gen = ideas.New(ideasLLM, env("IDEAS_PATH", "data/ideas.json"), envDuration("IDEAS_EVERY", 12*time.Hour))
+		logged := 0.0
+		after = func(s *digest.Snapshot) {
+			// Траты — в лог, только когда выросли: иначе строка каждые 15 минут.
+			if spent := trLLM.Spent() + ideasLLM.Spent(); spent != logged {
+				logged = spent
+				log.Printf("polza: spent since start %.2f ₽ (translate %.2f, trends %.2f)",
+					spent, trLLM.Spent(), ideasLLM.Spent())
+			}
+			go gen.MaybeGenerate(ctx, s)
+		}
 		log.Printf("translator: polza %s, ideas: %s", model, ideasModel)
 	} else {
 		log.Printf("translator and ideas: off (POLZA_AI_API_KEY is empty), headlines stay in original")
@@ -68,6 +81,7 @@ func main() {
 		Cache:        cache,
 		PerSource:    perSource,
 		AfterRefresh: after,
+		LastPath:     env("LAST_PATH", "data/last.json"),
 	})
 	go d.Run(ctx, refresh)
 

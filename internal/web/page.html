@@ -16,9 +16,10 @@
 <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1c1c1e" media="(prefers-color-scheme: dark)">
 {{- end}}
-<link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+<link rel="icon" href="{{static "icon.svg"}}" type="image/svg+xml">
+<link rel="apple-touch-icon" href="{{static "apple-touch-icon.png"}}">
 <link rel="alternate" hreflang="{{.Other}}" href="/{{.Other}}{{.Query}}">
-<link rel="stylesheet" href="/static/style.css?v={{cssVersion}}">
+<link rel="stylesheet" href="{{static "style.css"}}">
 {{- if .Loading}}
 <meta http-equiv="refresh" content="5">
 {{- end}}

@@ -9,6 +9,7 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
+	"io"
 	"io/fs"
 	"log"
 	"net/http"
@@ -26,15 +27,45 @@ import (
 var files embed.FS
 
 var page = template.Must(template.New("page.html").Funcs(template.FuncMap{
-	"cssVersion": func() string { return cssVersion },
+	"static": staticURL,
 }).ParseFS(files, "page.html"))
 
-// cssVersion — хэш стилей в ссылке на них: браузер кэширует style.css на
-// сутки, а после правки сразу берёт новый.
-var cssVersion = func() string {
-	data, _ := files.ReadFile("static/style.css")
-	return fmt.Sprintf("%x", sha256.Sum256(data))[:10]
+// staticURL — ссылка на файл из static с хэшем содержимого: браузер
+// кэширует статику на сутки, а после правки (стили, иконка) сразу берёт
+// новую версию.
+func staticURL(name string) (string, error) {
+	u, ok := staticURLs[name]
+	if !ok {
+		return "", fmt.Errorf("static: no file %q", name)
+	}
+	return u, nil
+}
+
+var staticURLs = func() map[string]string {
+	urls := map[string]string{}
+	entries, err := files.ReadDir("static")
+	if err != nil {
+		panic(err)
+	}
+	for _, e := range entries {
+		data, err := files.ReadFile("static/" + e.Name())
+		if err != nil {
+			panic(err)
+		}
+		sum := sha256.Sum256(data)
+		urls[e.Name()] = fmt.Sprintf("/static/%s?v=%x", e.Name(), sum[:5])
+	}
+	return urls
 }()
+
+// Опечатка в {{static "…"}} или другая ошибка шаблона роняет запуск, а не
+// отдаёт 500 на каждой странице уже в проде. Страница загрузки проходит
+// <head>, где вся статика.
+func init() {
+	if err := page.Execute(io.Discard, pageView{Lang: feeds.RU, Other: feeds.EN, T: text[feeds.RU], Loading: true}); err != nil {
+		panic("page.html: " + err.Error())
+	}
+}
 
 type strs struct {
 	Title, Description, Updated, Down, Loading, Switch, Sources, All string
@@ -91,7 +122,9 @@ func Handler(d *digest.Digest, g *ideas.Generator) http.Handler {
 	mux.HandleFunc("GET /ru", s.page(feeds.RU))
 	mux.HandleFunc("GET /en", s.page(feeds.EN))
 	mux.HandleFunc("GET /theme", setTheme)
-	mux.Handle("GET /static/", http.StripPrefix("/static/", cacheFor(24*time.Hour, http.FileServerFS(static))))
+	// Ссылки на статику несут хэш содержимого (staticURL), так что кэш
+	// на год безопасен: после правки адрес другой.
+	mux.Handle("GET /static/", http.StripPrefix("/static/", immutable(http.FileServerFS(static))))
 	mux.HandleFunc("GET /healthz", s.health)
 	return mux
 }
@@ -433,9 +466,9 @@ func Ago(lang string, d time.Duration) string {
 	}
 }
 
-func cacheFor(d time.Duration, h http.Handler) http.Handler {
+func immutable(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", int(d.Seconds())))
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
 		h.ServeHTTP(w, r)
 	})
 }

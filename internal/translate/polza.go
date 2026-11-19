@@ -7,8 +7,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
@@ -32,7 +34,14 @@ type Polza struct {
 	BaseURL string // https://polza.ai/api
 	Model   string
 	Client  *http.Client
+
+	// Сколько списала Polza с запуска, в сотых долях копейки (usage.cost_rub
+	// из ответов).
+	spent atomic.Int64
 }
+
+// Spent — рубли, списанные Polza за запросы этого клиента с запуска.
+func (p *Polza) Spent() float64 { return float64(p.spent.Load()) / 1e4 }
 
 func NewPolza(key, baseURL, model string) *Polza {
 	return &Polza{
@@ -108,9 +117,15 @@ func (p *Polza) Complete(ctx context.Context, system, user string, temperature f
 				Content string `json:"content"`
 			} `json:"message"`
 		} `json:"choices"`
+		Usage struct {
+			CostRub json.Number `json:"cost_rub"`
+		} `json:"usage"`
 	}
 	if err := json.Unmarshal(raw, &out); err != nil {
 		return "", fmt.Errorf("polza: %w", err)
+	}
+	if cost, err := out.Usage.CostRub.Float64(); err == nil {
+		p.spent.Add(int64(math.Round(cost * 1e4)))
 	}
 	if len(out.Choices) == 0 {
 		return "", fmt.Errorf("polza: empty response: %s", truncate(string(raw), 300))

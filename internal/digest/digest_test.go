@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/placardy/pager/internal/feeds"
 	"github.com/placardy/pager/internal/translate"
@@ -133,5 +135,61 @@ func TestRefreshShowsUncheckedWhenTranslatorIsDown(t *testing.T) {
 	h := d.Snapshot().Sections[0].Sources[0].Items[0]
 	if h.Title["ru"] != "Rust 2.0" || h.Translated["ru"] {
 		t.Errorf("want original on failure: %+v", h)
+	}
+}
+
+// После рестарта снимок есть сразу — из заголовков прошлого запуска, с
+// переводами из кэша и временем прошлого обновления.
+func TestLastHeadlinesSurviveRestart(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "last.json")
+	cache, _ := translate.OpenCache(filepath.Join(t.TempDir(), "tr.json"))
+	ff := fakeFetcher{
+		"hn":   {items: []feeds.Item{{Title: "Rust 2.0", URL: "https://hn/1"}}},
+		"habr": {items: []feeds.Item{{Title: "Привет", URL: "https://habr/1"}}},
+		"dead": {err: errors.New("timeout")},
+	}
+	d := New(Options{Sections: sections, Fetcher: ff, Translator: &fakeTr{}, Cache: cache, LastPath: path})
+	d.Refresh(context.Background())
+	updated := d.Snapshot().Updated
+
+	d2 := New(Options{Sections: sections, Fetcher: ff, Translator: &fakeTr{}, Cache: cache, LastPath: path})
+	snap := d2.Snapshot()
+	if snap == nil {
+		t.Fatal("no snapshot right after restart")
+	}
+	if hn := snap.Sections[0].Sources[0].Items; len(hn) != 1 || hn[0].Title["ru"] != "RU:Rust 2.0" {
+		t.Errorf("hn after restart: %+v", hn)
+	}
+	if !snap.Updated.Equal(updated) {
+		t.Errorf("updated %v, want %v", snap.Updated, updated)
+	}
+	if !snap.Sections[0].Sources[2].Down {
+		t.Error("feed missing from the file must be Down")
+	}
+}
+
+// Файл старше суток не грузится; фиды, убранные из sources.json, из файла
+// выпадают.
+func TestLastHeadlinesStaleAndRemovedFeeds(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "last.json")
+	ff := fakeFetcher{
+		"hn":   {items: []feeds.Item{{Title: "Rust 2.0", URL: "https://hn/1"}}},
+		"habr": {items: []feeds.Item{{Title: "Привет", URL: "https://habr/1"}}},
+	}
+	d := New(Options{Sections: sections, Fetcher: ff, LastPath: path})
+	d.Refresh(context.Background())
+
+	onlyHN := []feeds.Section{{ID: "tech", Name: sections[0].Name, Sources: sections[0].Sources[:1]}}
+	d2 := New(Options{Sections: onlyHN, Fetcher: ff, LastPath: path})
+	if d2.Snapshot() == nil || len(d2.last) != 1 || d2.last["habr"] != nil {
+		t.Errorf("removed feed kept: %v", d2.last)
+	}
+
+	cache, _ := translate.OpenCache("")
+	d3 := &Digest{sections: sections, cache: cache, perSource: 10, lastPath: path,
+		last: map[string][]feeds.Item{}, now: func() time.Time { return time.Now().Add(lastMaxAge + time.Hour) }}
+	d3.loadLast()
+	if d3.Snapshot() != nil {
+		t.Error("day-old headlines shown after restart")
 	}
 }

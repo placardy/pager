@@ -4,7 +4,11 @@ package digest
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"log"
+	"os"
+	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -53,9 +57,15 @@ type Digest struct {
 	cache     *translate.Cache
 	perSource int
 	after     func(*Snapshot)
+	lastPath  string
 
 	// Последние удачные записи каждого фида: на 304 и на ошибке берём их.
 	last map[string][]feeds.Item
+	// В last есть новое с прошлой записи на диск.
+	lastDirty bool
+	// Снимок поднят из файла: первый проход покажет свежие заголовки сразу,
+	// не дожидаясь переводов, как после запуска с нуля.
+	restored bool
 
 	snap atomic.Pointer[Snapshot]
 	now  func() time.Time
@@ -69,6 +79,16 @@ type Options struct {
 	PerSource  int
 	// AfterRefresh зовётся после каждого прохода со свежим снимком.
 	AfterRefresh func(*Snapshot)
+	// LastPath — файл с последними заголовками каждого фида. После рестарта
+	// сайт сразу показывает их, а не «Собираем заголовки» на пару минут,
+	// пока медленные фиды не ответят. Пусто — только в памяти.
+	LastPath string
+}
+
+// saved — содержимое LastPath.
+type saved struct {
+	Saved time.Time
+	Feeds map[string][]feeds.Item
 }
 
 func New(o Options) *Digest {
@@ -78,16 +98,107 @@ func New(o Options) *Digest {
 	if o.PerSource <= 0 {
 		o.PerSource = 10
 	}
-	return &Digest{
+	d := &Digest{
 		sections:  o.Sections,
 		fetcher:   o.Fetcher,
 		tr:        o.Translator,
 		cache:     o.Cache,
 		perSource: o.PerSource,
 		after:     o.AfterRefresh,
+		lastPath:  o.LastPath,
 		last:      map[string][]feeds.Item{},
 		now:       time.Now,
 	}
+	d.loadLast()
+	return d
+}
+
+// lastMaxAge — заголовки старше этого после рестарта не показываем: сайт,
+// простоявший неделю, не должен выдавать недельные новости за свежие.
+const lastMaxAge = 24 * time.Hour
+
+// loadLast поднимает заголовки прошлого запуска и сразу собирает из них
+// снимок. Время снимка — когда их сохранили, чтобы «обновлено …» не врало.
+// Фиды, которых больше нет в sources.json, отбрасываются.
+func (d *Digest) loadLast() {
+	if d.lastPath == "" {
+		return
+	}
+	data, err := os.ReadFile(d.lastPath)
+	if err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			log.Printf("last headlines: %v", err)
+		}
+		return
+	}
+	var s saved
+	if err := json.Unmarshal(data, &s); err != nil {
+		log.Printf("last headlines: %s: %v", d.lastPath, err)
+		return
+	}
+	if age := d.now().Sub(s.Saved); s.Saved.IsZero() || age > lastMaxAge {
+		log.Printf("last headlines: skipped, saved %s ago", age.Round(time.Minute))
+		return
+	}
+	ok := map[string]bool{}
+	for _, feed := range d.feedURLs() {
+		if items, found := s.Feeds[feed]; found {
+			d.last[feed] = items
+			ok[feed] = true
+		}
+	}
+	if len(ok) == 0 {
+		return
+	}
+	snap := d.build(ok)
+	snap.Updated = s.Saved
+	d.snap.Store(snap)
+	d.restored = true
+}
+
+func (d *Digest) feedURLs() []string {
+	var urls []string
+	for _, sec := range d.sections {
+		for _, s := range sec.Sources {
+			urls = append(urls, s.Feed)
+		}
+	}
+	return urls
+}
+
+// saveLast пишет last на диск, если с прошлого раза пришло новое. Пишутся
+// только фиды из текущего sources.json — удалённые не копятся в файле.
+func (d *Digest) saveLast() error {
+	if d.lastPath == "" || !d.lastDirty {
+		return nil
+	}
+	cur := map[string][]feeds.Item{}
+	for _, feed := range d.feedURLs() {
+		if items, ok := d.last[feed]; ok {
+			cur[feed] = items
+		}
+	}
+	// Время — как у снимка, чтобы после рестарта «обновлено …» совпадало.
+	at := d.now()
+	if snap := d.snap.Load(); snap != nil {
+		at = snap.Updated
+	}
+	data, err := json.Marshal(saved{Saved: at, Feeds: cur})
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(filepath.Dir(d.lastPath), 0o755); err != nil {
+		return err
+	}
+	tmp := d.lastPath + ".tmp"
+	if err := os.WriteFile(tmp, data, 0o644); err != nil {
+		return err
+	}
+	if err := os.Rename(tmp, d.lastPath); err != nil {
+		return err
+	}
+	d.lastDirty = false
+	return nil
 }
 
 // Snapshot — текущая сводка или nil, пока первая не собрана.
@@ -121,14 +232,20 @@ var retryDelay = 3 * time.Second
 func (d *Digest) Refresh(ctx context.Context) {
 	start := d.now()
 	fresh := d.fetchAll(ctx)
-	if d.tr == nil || d.snap.Load() == nil {
-		// Первая сводка после запуска — сразу, не дожидаясь переводов.
+	if d.tr == nil || d.snap.Load() == nil || d.restored {
+		// Первая сводка после запуска — сразу, не дожидаясь переводов: и с
+		// нуля, и поверх снимка из файла (переводы после долгого простоя —
+		// это минуты).
 		d.snap.Store(d.build(fresh))
+		d.restored = false
 	}
 	d.translateMissing(ctx)
 	d.snap.Store(d.build(fresh))
 	if err := d.cache.Save(cacheMaxAge); err != nil {
 		log.Printf("translations cache: %v", err)
+	}
+	if err := d.saveLast(); err != nil {
+		log.Printf("last headlines: %v", err)
 	}
 	log.Printf("refresh: %d sources, %d translations cached, %s",
 		len(fresh), d.cache.Len(), d.now().Sub(start).Round(time.Millisecond))
@@ -183,6 +300,7 @@ func (d *Digest) fetchAll(ctx context.Context) map[string]bool {
 		default:
 			ok[r.feed] = true
 			d.last[r.feed] = r.items
+			d.lastDirty = true
 		}
 	}
 	return ok
